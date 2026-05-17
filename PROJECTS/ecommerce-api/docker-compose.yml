@@ -8,3 +8,15 @@ services:
       POSTGRES_PASSWORD: ecommerce
     ports:
       - "5432:5432"
+  api:
+    build: .
+    container_name: ecommerce-api
+    depends_on:
+      - postgres
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/ecommerce
+      DB_USER: ecommerce
+      DB_PASSWORD: ecommerce
+      JWT_SECRET: change-this-secret-in-production
+    ports:
+      - "8080:8080"

@@ -1,0 +1,33 @@
+name: Ecommerce API CI
+
+on:
+  push:
+    paths:
+      - "PROJECTS/ecommerce-api/**"
+      - ".github/workflows/ecommerce-api-ci.yml"
+  pull_request:
+    paths:
+      - "PROJECTS/ecommerce-api/**"
+      - ".github/workflows/ecommerce-api-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: PROJECTS/ecommerce-api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run tests
+        run: mvn test

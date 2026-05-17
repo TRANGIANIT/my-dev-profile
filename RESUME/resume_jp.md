@@ -6,35 +6,60 @@ Javaバックエンドエンジニア / Spring Bootエンジニア
 
 ## 自己PR
 
-JavaとSpring Bootを中心に、REST API、データベース設計、保守しやすいコードを書くことを意識して学習・開発しています。AIコーディングツールを活用しながら、効率的で品質の高い開発を目指しています。
+JavaとSpring Bootを中心に、REST API、データベース連携、保守しやすいレイヤードアーキテクチャを意識して学習・開発しています。DTO、バリデーション、例外処理、JPA、Flyway、テストを取り入れ、実務に近い形のバックエンドAPIを作ることを目標にしています。
 
 ## 技術スキル
 
-- Java
-- Spring Boot
-- REST API
+- Java 21
+- Spring Boot / Spring Web / Spring Data JPA
+- REST API設計
+- Bean Validation
 - PostgreSQL / MySQL
-- Git / GitHub
+- Flyway
+- Spring Security / JWT
+- JUnit 5 / MockMvc
+- Testcontainers
 - Docker
+- GitHub Actions
+- Git / GitHub
 - React / TypeScript 基礎
 
 ## プロジェクト
 
 ### Ecommerce API
 
-ECサイト向けのバックエンドAPIです。
+ECサイト向けの商品・注文管理バックエンドAPIです。
+
+GitHub:
+https://github.com/TRANGIANIT/my-dev-profile/tree/main/PROJECTS/ecommerce-api
 
 使用技術:
-- Java
+- Java 21
 - Spring Boot
+- Spring Data JPA / Hibernate
 - PostgreSQL
+- Flyway
 - Docker
+- Swagger UI / OpenAPI
+- Spring Security / JWT
+- JUnit 5 / MockMvc
+- Testcontainers
 
-機能:
-- 商品管理
-- ユーザー認証
-- 注文管理
-- APIバリデーション
+実装内容:
+- 商品CRUD API
+- 注文作成API
+- 注文作成時の在庫チェック
+- 商品在庫更新のOptimistic Locking
+- ユーザー登録・ログインAPI
+- JWT認証
+- ロールベース認可
+- DTOによるリクエスト・レスポンス設計
+- リクエストバリデーション
+- グローバル例外処理
+- FlywayによるDBマイグレーション
+- Product API / Order API の結合テスト
+- GitHub Actions CI
+- Dockerfile / Docker Compose
 
 ## 言語
 
