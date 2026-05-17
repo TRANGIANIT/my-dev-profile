@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -83,6 +85,26 @@ class ProductControllerIntegrationTest {
     }
 
     @Test
+    void search_shouldReturnPagedFilteredProducts() throws Exception {
+        productRepository.save(new Product("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(120.50), 10));
+        productRepository.save(new Product("Mouse", "Wireless mouse", BigDecimal.valueOf(45.00), 0));
+        productRepository.save(new Product("Monitor", "Wide display", BigDecimal.valueOf(250.00), 5));
+
+        mockMvc.perform(get("/api/products/search")
+                        .param("keyword", "key")
+                        .param("minPrice", "100")
+                        .param("inStock", "true")
+                        .param("page", "0")
+                        .param("size", "5")
+                        .param("sort", "price,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].name").value("Keyboard"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.size").value(5));
+    }
+
+    @Test
     void findById_shouldReturnProduct() throws Exception {
         Product product = productRepository.save(
                 new Product("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(120.50), 10)
@@ -129,6 +151,25 @@ class ProductControllerIntegrationTest {
                 .andExpect(status().isNoContent());
 
         assertThat(productRepository.existsById(product.getId())).isFalse();
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void uploadImage_shouldReturnProductWithImageUrl() throws Exception {
+        Product product = productRepository.save(
+                new Product("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(120.50), 10)
+        );
+        MockMultipartFile image = new MockMultipartFile(
+                "file",
+                "keyboard.png",
+                "image/png",
+                "fake-image".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/products/{id}/image", product.getId()).file(image))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(product.getId()))
+                .andExpect(jsonPath("$.imageUrl").isNotEmpty());
     }
 
     @Test

@@ -32,6 +32,9 @@ public class Product {
     @Column(nullable = false)
     private Integer stockQuantity;
 
+    @Column(length = 500)
+    private String imageUrl;
+
     @Version
     @Column(nullable = false)
     private Long version;
@@ -84,6 +87,10 @@ public class Product {
         return stockQuantity;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
     public Long getVersion() {
         return version;
     }
@@ -103,11 +110,19 @@ public class Product {
         this.stockQuantity = stockQuantity;
     }
 
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public void decreaseStock(int quantity) {
         if (quantity > stockQuantity) {
             throw new IllegalArgumentException("Insufficient stock for product id: " + id);
         }
 
         stockQuantity -= quantity;
+    }
+
+    public void increaseStock(int quantity) {
+        stockQuantity += quantity;
     }
 }

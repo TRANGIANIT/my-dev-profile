@@ -20,18 +20,33 @@ public class JwtService {
     private final ObjectMapper objectMapper;
     private final String secret;
     private final long expirationSeconds;
+    private final long refreshExpirationSeconds;
 
     public JwtService(
             ObjectMapper objectMapper,
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-seconds}") long expirationSeconds
+            @Value("${app.jwt.expiration-seconds}") long expirationSeconds,
+            @Value("${app.jwt.refresh-expiration-seconds}") long refreshExpirationSeconds
     ) {
         this.objectMapper = objectMapper;
         this.secret = secret;
         this.expirationSeconds = expirationSeconds;
+        this.refreshExpirationSeconds = refreshExpirationSeconds;
     }
 
-    public String generateToken(String username, String role) {
+    public String generateAccessToken(String username, String role) {
+        return generateToken(username, role, "access", expirationSeconds);
+    }
+
+    public String generateRefreshToken(String username, String role) {
+        return generateToken(username, role, "refresh", refreshExpirationSeconds);
+    }
+
+    public long accessTokenExpiresIn() {
+        return expirationSeconds;
+    }
+
+    private String generateToken(String username, String role, String tokenType, long expiresInSeconds) {
         try {
             Map<String, Object> header = new LinkedHashMap<>();
             header.put("alg", "HS256");
@@ -40,7 +55,8 @@ public class JwtService {
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("sub", username);
             payload.put("role", role);
-            payload.put("exp", Instant.now().plusSeconds(expirationSeconds).getEpochSecond());
+            payload.put("type", tokenType);
+            payload.put("exp", Instant.now().plusSeconds(expiresInSeconds).getEpochSecond());
 
             String headerPart = base64Url(objectMapper.writeValueAsBytes(header));
             String payloadPart = base64Url(objectMapper.writeValueAsBytes(payload));
@@ -55,7 +71,15 @@ public class JwtService {
         return payload(token).get("sub").toString();
     }
 
-    public boolean isValid(String token) {
+    public boolean isAccessToken(String token) {
+        return isValid(token, "access");
+    }
+
+    public boolean isRefreshToken(String token) {
+        return isValid(token, "refresh");
+    }
+
+    private boolean isValid(String token, String expectedType) {
         try {
             String[] parts = token.split("\\.");
             if (parts.length != 3) {
@@ -67,7 +91,12 @@ public class JwtService {
                 return false;
             }
 
-            Number expiration = (Number) payload(token).get("exp");
+            Map<String, Object> payload = payload(token);
+            if (!expectedType.equals(payload.get("type"))) {
+                return false;
+            }
+
+            Number expiration = (Number) payload.get("exp");
             return expiration.longValue() > Instant.now().getEpochSecond();
         } catch (Exception exception) {
             return false;

@@ -61,6 +61,22 @@ public class OrderService {
         return OrderResponse.from(savedOrder);
     }
 
+    @Transactional
+    public OrderResponse cancel(Long id) {
+        Order order = getOrderOrThrow(id);
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BusinessException("Order is already cancelled");
+        }
+
+        for (OrderItem item : order.getItems()) {
+            item.getProduct().increaseStock(item.getQuantity());
+        }
+        order.cancel();
+
+        return OrderResponse.from(order);
+    }
+
     private Order getOrderOrThrow(Long id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));

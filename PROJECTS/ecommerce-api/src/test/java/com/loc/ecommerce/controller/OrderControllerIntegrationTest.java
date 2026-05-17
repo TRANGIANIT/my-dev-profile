@@ -20,6 +20,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -118,6 +119,59 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(orderId))
                 .andExpect(jsonPath("$.status").value("CREATED"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void cancel_shouldReturnCancelledOrderAndRestoreProductStock() throws Exception {
+        Product product = productRepository.save(
+                new Product("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(120.50), 10)
+        );
+        CreateOrderApiRequest request = new CreateOrderApiRequest(
+                List.of(new OrderItemApiRequest(product.getId(), 3))
+        );
+        String responseBody = mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
+
+        mockMvc.perform(patch("/api/orders/{id}/cancel", orderId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(orderId))
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
+        assertThat(updatedProduct.getStockQuantity()).isEqualTo(10);
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void cancel_shouldReturnBadRequestWhenOrderIsAlreadyCancelled() throws Exception {
+        Product product = productRepository.save(
+                new Product("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(120.50), 10)
+        );
+        CreateOrderApiRequest request = new CreateOrderApiRequest(
+                List.of(new OrderItemApiRequest(product.getId(), 1))
+        );
+        String responseBody = mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
+
+        mockMvc.perform(patch("/api/orders/{id}/cancel", orderId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/orders/{id}/cancel", orderId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Order is already cancelled"));
     }
 
     @Test

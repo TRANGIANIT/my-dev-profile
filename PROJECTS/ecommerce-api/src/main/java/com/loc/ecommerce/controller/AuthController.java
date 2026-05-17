@@ -2,6 +2,7 @@ package com.loc.ecommerce.controller;
 
 import com.loc.ecommerce.dto.AuthResponse;
 import com.loc.ecommerce.dto.LoginRequest;
+import com.loc.ecommerce.dto.RefreshTokenRequest;
 import com.loc.ecommerce.dto.RegisterRequest;
 import com.loc.ecommerce.service.AuthService;
 import jakarta.validation.Valid;
@@ -30,5 +31,10 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/refresh")
+    public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return authService.refresh(request);
     }
 }

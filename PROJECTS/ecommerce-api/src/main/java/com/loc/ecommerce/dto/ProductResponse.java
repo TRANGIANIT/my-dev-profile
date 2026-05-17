@@ -11,6 +11,7 @@ public record ProductResponse(
         String description,
         BigDecimal price,
         Integer stockQuantity,
+        String imageUrl,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -21,6 +22,7 @@ public record ProductResponse(
                 product.getDescription(),
                 product.getPrice(),
                 product.getStockQuantity(),
+                product.getImageUrl(),
                 product.getCreatedAt(),
                 product.getUpdatedAt()
         );

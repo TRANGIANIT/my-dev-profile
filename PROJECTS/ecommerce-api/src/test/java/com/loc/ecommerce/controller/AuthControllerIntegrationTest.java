@@ -44,7 +44,9 @@ class AuthControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresIn").isNumber())
                 .andExpect(jsonPath("$.username").value("admin"))
                 .andExpect(jsonPath("$.role").value("ADMIN"));
 
@@ -66,6 +68,29 @@ class AuthControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.username").value("user"))
+                .andExpect(jsonPath("$.role").value("USER"));
+    }
+
+    @Test
+    void refresh_shouldReturnNewTokensForValidRefreshToken() throws Exception {
+        RegisterApiRequest registerRequest = new RegisterApiRequest("user", "password123", UserRole.USER);
+        String registerResponse = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String refreshToken = objectMapper.readTree(registerResponse).get("refreshToken").asText();
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshApiRequest(refreshToken))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
                 .andExpect(jsonPath("$.username").value("user"))
                 .andExpect(jsonPath("$.role").value("USER"));
     }
@@ -89,5 +114,8 @@ class AuthControllerIntegrationTest {
     }
 
     private record LoginApiRequest(String username, String password) {
+    }
+
+    private record RefreshApiRequest(String refreshToken) {
     }
 }

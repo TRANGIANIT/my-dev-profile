@@ -90,4 +90,8 @@ public class Order {
         item.assignOrder(this);
         totalAmount = totalAmount.add(item.getLineTotal());
     }
+
+    public void cancel() {
+        status = OrderStatus.CANCELLED;
+    }
 }

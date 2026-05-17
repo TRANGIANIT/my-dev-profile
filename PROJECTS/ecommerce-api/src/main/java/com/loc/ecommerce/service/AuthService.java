@@ -2,6 +2,7 @@ package com.loc.ecommerce.service;
 
 import com.loc.ecommerce.dto.AuthResponse;
 import com.loc.ecommerce.dto.LoginRequest;
+import com.loc.ecommerce.dto.RefreshTokenRequest;
 import com.loc.ecommerce.dto.RegisterRequest;
 import com.loc.ecommerce.entity.AppUser;
 import com.loc.ecommerce.exception.BusinessException;
@@ -47,8 +48,7 @@ public class AuthService {
                 request.resolvedRole()
         );
         AppUser savedUser = userRepository.save(user);
-        String token = jwtService.generateToken(savedUser.getUsername(), savedUser.getRole().name());
-        return new AuthResponse(token, "Bearer", savedUser.getUsername(), savedUser.getRole().name());
+        return createAuthResponse(savedUser.getUsername(), savedUser.getRole().name());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -61,7 +61,23 @@ public class AuthService {
                 .map(authority -> authority.replace("ROLE_", ""))
                 .findFirst()
                 .orElse("USER");
-        String token = jwtService.generateToken(authentication.getName(), role);
-        return new AuthResponse(token, "Bearer", authentication.getName(), role);
+        return createAuthResponse(authentication.getName(), role);
+    }
+
+    public AuthResponse refresh(RefreshTokenRequest request) {
+        if (!jwtService.isRefreshToken(request.refreshToken())) {
+            throw new BusinessException("Invalid refresh token");
+        }
+
+        String username = jwtService.extractUsername(request.refreshToken());
+        AppUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException("Invalid refresh token"));
+        return createAuthResponse(user.getUsername(), user.getRole().name());
+    }
+
+    private AuthResponse createAuthResponse(String username, String role) {
+        String token = jwtService.generateAccessToken(username, role);
+        String refreshToken = jwtService.generateRefreshToken(username, role);
+        return new AuthResponse(token, refreshToken, "Bearer", jwtService.accessTokenExpiresIn(), username, role);
     }
 }

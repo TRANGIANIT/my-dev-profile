@@ -62,12 +62,27 @@ config/       Application configuration
 docker compose up -d
 ```
 
+This compose file starts PostgreSQL, the Spring Boot API, and the React web UI.
+
+```txt
+API: http://localhost:8080
+Web: http://localhost:3000
+Swagger: http://localhost:8080/swagger-ui.html
+```
+
 Database defaults:
 
 ```txt
 DB_NAME=ecommerce
 DB_USER=ecommerce
 DB_PASSWORD=ecommerce
+```
+
+Docker Compose also enables demo seed data:
+
+```txt
+admin@example.com / password123
+user@example.com / password123
 ```
 
 ## Run Tests
@@ -83,6 +98,17 @@ mvn verify
 ```
 
 `mvn verify` also includes the Testcontainers PostgreSQL integration test. If Docker is not running, that test is skipped.
+
+## CI/CD
+
+`.github/workflows/ecommerce-fullstack-ci-cd.yml` verifies API tests, web build, and Docker image builds. Manual deploy uses repository secrets:
+
+```txt
+DEPLOY_HOST
+DEPLOY_USER
+DEPLOY_SSH_KEY
+DEPLOY_PATH
+```
 
 ## Run Application
 
@@ -125,6 +151,7 @@ See [docs/demo-flow.md](docs/demo-flow.md) for a full demo flow:
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | GET | `/api/products` | Get all products |
+| GET | `/api/products/search` | Search products with keyword, price range, stock filter, pagination |
 | GET | `/api/products/{id}` | Get product by id |
 | POST | `/api/products` | Create product, ADMIN only |
 | PUT | `/api/products/{id}` | Update product, ADMIN only |
@@ -136,6 +163,7 @@ See [docs/demo-flow.md](docs/demo-flow.md) for a full demo flow:
 | --- | --- | --- |
 | POST | `/api/auth/register` | Register user |
 | POST | `/api/auth/login` | Login and receive JWT |
+| POST | `/api/auth/refresh` | Refresh access token with refresh token |
 
 Register admin user:
 
@@ -195,6 +223,7 @@ Example response:
 | GET | `/api/orders` | Get all orders |
 | GET | `/api/orders/{id}` | Get order by id |
 | POST | `/api/orders` | Create order, USER or ADMIN only |
+| PATCH | `/api/orders/{id}/cancel` | Cancel order and restore stock, USER or ADMIN only |
 
 Create order:
 
