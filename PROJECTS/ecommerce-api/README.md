@@ -104,6 +104,22 @@ OpenAPI JSON:
 http://localhost:8080/v3/api-docs
 ```
 
+## Screenshots
+
+Swagger UI:
+
+![Swagger UI](screenshots/swagger-ui.png)
+
+## Demo Flow
+
+See [docs/demo-flow.md](docs/demo-flow.md) for a full demo flow:
+
+1. Register admin
+2. Create product
+3. Register user
+4. Create order
+5. Check product stock
+
 ## Product API
 
 | Method | Endpoint | Description |
